@@ -1,0 +1,98 @@
+---
+# tasks file for vps-setup
+- name: get value
+  shell:
+    cmd: sysctl net.ipv4.tcp_congestion_control | grep bbr; echo $?
+  register: grep_output
+  ignore_errors: yes
+  changed_when: false
+- name: Set the variable
+  set_fact:
+    sysctl_bbr: "{% if grep_output.stdout == '0' %}true{% else %}false{% endif %}"
+- name: Try to install BBR
+  when: 
+    - "{{ ansible_facts['kernel'] is version('4.9', '>=') }}"
+  block: 
+    - name: Check if BBR installed
+      when: sysctl_bbr != 0
+      block:
+        - debug:
+            msg: "{{ inventory_hostname }} can use BBR and it will be enabled."
+        - name: Set BBR
+          ansible.posix.sysctl:
+            name: net.core.default_qdisc
+            value: "fq"
+            state: present
+        - name: Set queue
+          ansible.posix.sysctl:
+            name: net.ipv4.tcp_congestion_control
+            value: "bbr"
+            state: present
+    - name: BBR Already on
+      when: sysctl_bbr == 0
+      debug:
+        msg: "{{ inventory_hostname }} is already using BBR"
+  rescue:
+    - name: Print reason why BBR install failed
+      when: "{{ ansible_facts['kernel'] is version('4.9', '>=') }}"
+      debug:
+        msg: "{{ inventory_hostname }} uses kernel that is older than 4.9, BBR can't be installed"
+- name: APT
+  block:
+    - name: Install tools for keyrings
+      ansible.builtin.apt:
+        pkg:
+          - gpg
+          - debian-keyring 
+          - debian-archive-keyring 
+          - apt-transport-https 
+          - curl
+    - name: Setup GPG
+      ansible.builtin.apt_key:
+        url: https://dl.cloudsmith.io/public/caddy/stable/gpg.key
+        state: present
+    - name: Add to repos
+      shell:
+        cmd: curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/debian.deb.txt' | sudo tee /etc/apt/sources.list.d/caddy-stable.list
+- name: Install caddy, jq
+  ansible.builtin.apt:
+    pkg:
+      - caddy
+      - jq
+    update_cache: yes
+- name: Install xray
+  shell:
+    cmd: bash -c "$(curl -L https://github.com/XTLS/Xray-install/raw/main/install-release.sh)" @ install
+- name: Generate x25519 PIK 
+  shell:
+    cmd: xray x25519 | head -n1 | cut -d' ' -f 3
+  register: x25519_pik
+- name: Generate x25519 PBK 
+  shell:
+    cmd: xray x25519 -i {{ x25519_pik }} | tail -1 | cut -d' ' -f 3
+  register: x25519_pbk
+- name: Generate SID
+  shell:
+    cmd: openssl rand -hex 8
+  register: short_id
+- name: Generate default user
+  shell:
+    cmd: xray uuid
+  register: xray_uuid
+- name: Copy config files
+  ansible.builtin.template:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+  loop:
+    - { src: "caddyfile.j2", dest: "/etc/caddy/Caddyfile" }
+    - { src: "xray.json.j2", dest: "/usr/local/etc/xray/config.json" }
+- name: Restart caddy and xray
+  ansible.builtin.systemd_service:
+    state: restarted
+    name: "{{ item }}"
+  loop:
+    - xray
+    - caddy
+- name: Print PBK, SID and UUID to connect to server.
+  debug:
+    msg: "UUID: {{ xray_uuid.stdout }}, SID: {{ short_id.stdout }}, PBK: {{ x25519_pbk.stdout }}"
