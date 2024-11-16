@@ -2,7 +2,7 @@
     "type": "vless",
     "server": "$VLESS_DOMAIN",
     "server_port": 443,
-    "uuid": "$XRAY_UUIX",
+    "uuid": "$XRAY_UUID",
     "flow": "xtls-rprx-vision",
     "tls": {
         "enabled": true,

@@ -52,7 +52,7 @@ systemctl restart caddy
 
 # Prettyprint outbound and clipboard string
 echo "Clipboard string format"
-envsubst < "vless://$XRAY_UUIX@$VLESS_DOMAIN:443?type=tcp&security=reality&pbk=$XRAY_PBK&fp=chrome&sni=$VLESS_DOMAIN&sid=$XRAY_SID&spx=%2F&flow=xtls-rprx-vision"
+envsubst < "vless://$XRAY_UUID@$VLESS_DOMAIN:443?type=tcp&security=reality&pbk=$XRAY_PBK&fp=chrome&sni=$VLESS_DOMAIN&sid=$XRAY_SID&spx=%2F&flow=xtls-rprx-vision"
 echo "XRay outbound config"
 wget -qO- https://raw.githubusercontent.com/Akiyamov/xray-vps-setup/refs/heads/main/templates_for_script/xray_outbound | envsubst > /usr/local/etc/xray/config.json
 echo "Sing-box outbound config"
