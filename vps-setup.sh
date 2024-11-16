@@ -54,8 +54,8 @@ systemctl restart caddy
 echo "Clipboard string format"
 echo "vless://$XRAY_UUID@$VLESS_DOMAIN:443?type=tcp&security=reality&pbk=$XRAY_PBK&fp=chrome&sni=$VLESS_DOMAIN&sid=$XRAY_SID&spx=%2F&flow=xtls-rprx-vision" | envsubst
 echo "XRay outbound config"
-wget -qO- https://raw.githubusercontent.com/Akiyamov/xray-vps-setup/refs/heads/main/templates_for_script/xray_outbound | envsubst > /usr/local/etc/xray/config.json
+wget -qO- https://raw.githubusercontent.com/Akiyamov/xray-vps-setup/refs/heads/main/templates_for_script/xray_outbound | envsubst 
 echo "Sing-box outbound config"
-wget -qO- https://raw.githubusercontent.com/Akiyamov/xray-vps-setup/refs/heads/main/templates_for_script/sing_box_outbound | envsubst > /usr/local/etc/xray/config.json
+wget -qO- https://raw.githubusercontent.com/Akiyamov/xray-vps-setup/refs/heads/main/templates_for_script/sing_box_outbound | envsubst 
 echo "Plain data"
 echo "PBK: $XRAY_PBK, SID: $XRAY_SID, UUID: $XRAY_UUID"
