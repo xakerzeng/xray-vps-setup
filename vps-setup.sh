@@ -1,6 +1,6 @@
 #/bin/bash
 
-set -exu
+set -e
 
 # Read domain input
 read -ep "Enter your domain:"$'\n' input_domain
