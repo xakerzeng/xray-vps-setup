@@ -20,7 +20,7 @@
       "security": "reality",
       "realitySettings": {
         {% if vless.steal_self %}
-        "dest": "127.0.0.1:{{ vless.port }}",
+        "dest": "127.0.0.1:4123",
         {% else %}
         "dest": "{{ vless.domain }}:443",
         {% endif %}
@@ -47,11 +47,27 @@
   "outbounds": [
     {
       "protocol": "freedom",
-      "tag": "direct"
+      "tag": "direct",
+      "settings": { "domainStrategy": "UseIPv4" }
     },
     {
       "protocol": "blackhole",
       "tag": "block"
     }
-  ]
+  ],
+  "routing": {
+    "rules": [
+        {"protocol": "bittorrent", "outboundTag": "block"}
+    ],
+    "domainStrategy": "IPIfNonMatch"
+  },
+  "dns": {
+    "servers": [
+      "1.1.1.1",
+      "8.8.8.8"
+    ],
+    "queryStrategy": "UseIPv4",
+    "disableFallback": false,
+    "tag": "dns-aux"
+  }
 }

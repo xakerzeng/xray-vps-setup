@@ -1,6 +1,9 @@
-#/bin/bash 
+#/bin/bash
 
 set -exu
+
+# Read domain input
+read -ep "Enter your domain:"$'\n' input_domain
 
 # Check if script started as root
 if [ "$EUID" -ne 0 ]
@@ -21,9 +24,10 @@ else
     fi
 fi
 
-# Install Caddy, JQ
-apt-get install -y debian-keyring debian-archive-keyring apt-transport-https curl jq
-curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/gpg.key' | gpg --dearmor -o --batch --yes /usr/share/keyrings/caddy-stable-archive-keyring.gpg 
+# Install Caddy
+apt-get update
+apt-get install -y debian-keyring debian-archive-keyring apt-transport-https curl idn
+curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/gpg.key' | gpg --dearmor -o --batch --yes /usr/share/keyrings/caddy-stable-archive-keyring.gpg
 curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/debian.deb.txt' | tee /etc/apt/sources.list.d/caddy-stable.list
 apt-get update
 apt-get install -y caddy
@@ -32,81 +36,29 @@ apt-get install -y caddy
 bash -c "$(curl -L https://github.com/XTLS/Xray-install/raw/main/install-release.sh)" @ install
 
 # Generate values for XRay
-XRAY_PIK=$(xray x25519 | head -n1 | cut -d' ' -f 3)
-XRAY_PBK=$(xray x25519 -i $XRAY_PIK | tail -1 | cut -d' ' -f 3)
-XRAY_SID=$(openssl rand -hex 8)
-XRAY_UUID=$(xray uuid)
+export VLESS_DOMAIN=$(echo $input_domain | idn)
+export XRAY_PIK=$(xray x25519 | head -n1 | cut -d' ' -f 3)
+export XRAY_PBK=$(xray x25519 -i $XRAY_PIK | tail -1 | cut -d' ' -f 3)
+export XRAY_SID=$(openssl rand -hex 8)
+export XRAY_UUID=$(xray uuid)
 
-# Setup config for Caddy
-echo "{
-    https_port $VLESS_PORT
-    default_bind 127.0.0.1
-}
-https://$VLESS_DOMAIN {
-  root * /srv
-  file_server browse
-  log {
-    output file /var/lib/caddy/access.log {
-      roll_size 10mb
-      roll_keep 5
-    }
-  }
-}
-http://$VLESS_DOMAIN {
-  redir https://{host}{uri} permanent
-}" > /etc/caddy/Caddyfile
+# Setup config for Caddy and XRay
+wget -qO- https://raw.githubusercontent.com/Akiyamov/xray-vps-setup/refs/heads/main/templates_for_script/caddy | envsubst > /etc/caddy/Caddyfile
+wget -qO- https://raw.githubusercontent.com/Akiyamov/xray-vps-setup/refs/heads/main/templates_for_script/xray | envsubst > /usr/local/etc/xray/config.json
 
-# Setup config for XRay
-echo '{
-  "log": {
-    "loglevel": "none"
-  },
-  "inbounds": [{
-    "listen": "0.0.0.0",
-    "port": 443,
-    "protocol": "vless",
-    "settings": {
-      "clients": [],
-      "decryption": "none"
-    },
-    "streamSettings": {
-      "network": "tcp",
-      "security": "reality",
-      "realitySettings": {
-        "dest": "",
-        "serverNames": [
-          ""
-        ],
-        "privateKey": "",
-        "shortIds": [
-          ""
-        ],
-        "spiderX": "/"
-      }
-    },
-    "sniffing": {
-      "enabled": true,
-      "destOverride": [
-        "http",
-        "tls",
-        "quic"
-      ],
-      "routeOnly": true
-    }
-  }],
-  "outbounds": [
-    {
-      "protocol": "freedom",
-      "tag": "direct"
-    },
-    {
-      "protocol": "blackhole",
-      "tag": "block"
-    }
-  ]
-}' > /usr/local/etc/xray/config.json
-echo $(jq ".inbounds[0].settings.clinets[0] += { \"id\": \"$XRAY_UUID\", \"email\": \"default\", \"flow\": \"xtls-rprx-vision\" }" /usr/local/etc/xray/config.json) > /usr/local/etc/xray/config.json
-echo $(jq ".inbounds[0].streamSettings += { \"realitySettings\": { \"dest\": \"127.0.0.1:$VLESS_PORT\", \"serverNames\": [ \"$VLESS_DOMAIN\" ], \"privateKey\": \"$XRAY_PIK\", \"shortIds\": [ \"$XRAY_SID\" ], \"spiderX\": \"/\" } }" /usr/local/etc/xray/config.json) > /usr/local/etc/xray/config.json
+envsubst < xray_conf.json > /usr/local/etc/xray/config.json
+envsubst < caddy_conf.json > /etc/caddy/Caddyfile
+
+# Restart XRay and Caddy
 systemctl restart xray
 systemctl restart caddy
+
+# Prettyprint outbound and clipboard string
+echo "Clipboard string format"
+envsubst < "vless://$XRAY_UUIX@$VLESS_DOMAIN:443?type=tcp&security=reality&pbk=$XRAY_PBK&fp=chrome&sni=$VLESS_DOMAIN&sid=$XRAY_SID&spx=%2F&flow=xtls-rprx-vision"
+echo "XRay outbound config"
+wget -qO- https://raw.githubusercontent.com/Akiyamov/xray-vps-setup/refs/heads/main/templates_for_script/xray_outbound | envsubst > /usr/local/etc/xray/config.json
+echo "Sing-box outbound config"
+wget -qO- https://raw.githubusercontent.com/Akiyamov/xray-vps-setup/refs/heads/main/templates_for_script/sing_box_outbound | envsubst > /usr/local/etc/xray/config.json
+echo "Plain data"
 echo "PBK: $XRAY_PBK, SID: $XRAY_SID, UUID: $XRAY_UUID"
