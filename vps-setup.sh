@@ -46,9 +46,6 @@ export XRAY_UUID=$(xray uuid)
 wget -qO- https://raw.githubusercontent.com/Akiyamov/xray-vps-setup/refs/heads/main/templates_for_script/caddy | envsubst > /etc/caddy/Caddyfile
 wget -qO- https://raw.githubusercontent.com/Akiyamov/xray-vps-setup/refs/heads/main/templates_for_script/xray | envsubst > /usr/local/etc/xray/config.json
 
-envsubst < xray_conf.json > /usr/local/etc/xray/config.json
-envsubst < caddy_conf.json > /etc/caddy/Caddyfile
-
 # Restart XRay and Caddy
 systemctl restart xray
 systemctl restart caddy
