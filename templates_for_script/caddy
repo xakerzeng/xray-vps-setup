@@ -1,0 +1,17 @@
+{
+    https_port 4123
+    default_bind 127.0.0.1
+}
+https://$VLESS_DOMAIN {
+  root * /srv
+  file_server browse
+  log {
+    output file /var/lib/caddy/access.log {
+      roll_size 10mb
+      roll_keep 5
+    }
+  }
+}
+http://$VLESS_DOMAIN {
+  redir https://{host}{uri} permanent
+}
