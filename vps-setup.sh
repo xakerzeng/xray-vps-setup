@@ -51,13 +51,11 @@ systemctl restart xray
 systemctl restart caddy
 
 # Configure iptables
-iptables --delete-chain
-iptables -A INPUT -i lo -j ACCEPT
-iptables -A OUTPUT -o lo -j ACCEPT
 iptables -A INPUT -m state --state RELATED,ESTABLISHED -j ACCEPT
 iptables -A INPUT -p tcp -m state --state NEW -m tcp --dport 22 -j ACCEPT
 iptables -A INPUT -p tcp -m tcp --dport 80 -j ACCEPT
 iptables -A INPUT -p tcp -m tcp --dport 443 -j ACCEPT
+iptables -P INPUT DROP
 iptables-save > /etc/network/iptables.rules
 
 # Prettyprint outbound and clipboard string
