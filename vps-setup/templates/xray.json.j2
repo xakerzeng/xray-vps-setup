@@ -19,11 +19,7 @@
       "network": "tcp",
       "security": "reality",
       "realitySettings": {
-        {% if vless.steal_self %}
         "dest": "127.0.0.1:4123",
-        {% else %}
-        "dest": "{{ vless.domain }}:443",
-        {% endif %}
         "serverNames": [
           "{{ vless.domain }}"
         ],

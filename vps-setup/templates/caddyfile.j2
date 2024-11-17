@@ -1,4 +1,5 @@
 {
+    http_port 80
     https_port 4123
     default_bind 127.0.0.1
 }
@@ -13,5 +14,6 @@ https://{{ vless.domain }} {
   }
 }
 http://{{ vless.domain }} {
+  bind 0.0.0.0
   redir https://{host}{uri} permanent
 }
