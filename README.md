@@ -7,6 +7,10 @@ Xray vps setup ansible
 bash <(wget -qO- https://raw.githubusercontent.com/Akiyamov/xray-vps-setup/refs/heads/main/vps-setup.sh)
 ```
 
+## Плейбук
+
+[Ansible-galaxy](https://galaxy.ansible.com/ui/standalone/roles/Akiyamov/xray-vps-setup/install/)
+
 ## Ручная установка
 
 Описана [здесь](https://gist.github.com/Akiyamov/bf39613c8e38451e9eaa9fad22f4f40a).  
