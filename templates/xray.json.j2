@@ -19,6 +19,7 @@
       "network": "tcp",
       "security": "reality",
       "realitySettings": {
+        "xver": 1,
         "dest": "127.0.0.1:4123",
         "serverNames": [
           "{{ vless.domain }}"
@@ -26,8 +27,7 @@
         "privateKey": "{{ x25519_pik.stdout }}",
         "shortIds": [
           "{{ short_id.stdout }}"
-        ],
-        "spiderX": "/"
+        ]
       }
     },
     "sniffing": {

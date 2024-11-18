@@ -24,9 +24,15 @@ else
     fi
 fi
 
+# Set vars for deb
+debconf-set-selections <<EOF
+iptables-persistent iptables-persistent/autosave_v4 boolean true
+iptables-persistent iptables-persistent/autosave_v6 boolean true
+EOF
+
 # Install Caddy
 apt-get update
-apt-get install -y debian-keyring debian-archive-keyring apt-transport-https curl idn
+apt-get install -y debian-keyring debian-archive-keyring apt-transport-https curl idn iptables-persistent
 curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/gpg.key' | gpg --dearmor -o /usr/share/keyrings/caddy-stable-archive-keyring.gpg
 curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/debian.deb.txt' | tee /etc/apt/sources.list.d/caddy-stable.list
 apt-get update
@@ -55,8 +61,10 @@ iptables -A INPUT -m state --state RELATED,ESTABLISHED -j ACCEPT
 iptables -A INPUT -p tcp -m state --state NEW -m tcp --dport 22 -j ACCEPT
 iptables -A INPUT -p tcp -m tcp --dport 80 -j ACCEPT
 iptables -A INPUT -p tcp -m tcp --dport 443 -j ACCEPT
+iptables -A INPUT -i lo -j ACCEPT
+iptables -A OUTPUT -o lo -j ACCEPT
 iptables -P INPUT DROP
-iptables-save > /etc/network/iptables.rules
+netfilter-persistent save
 
 # Prettyprint outbound and clipboard string
 echo "Clipboard string format"

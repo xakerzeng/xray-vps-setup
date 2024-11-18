@@ -47,13 +47,15 @@
           - debian-archive-keyring 
           - apt-transport-https 
           - curl
+          - iptables-persistent 
         update_cache: yes
     - name: Setup GPG
       ansible.builtin.shell:
         cmd: curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/gpg.key' | gpg --dearmor --yes -o /usr/share/keyrings/caddy-stable-archive-keyring.gpg
     - name: Add to repos
-      shell:
-        cmd: curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/debian.deb.txt' | tee /etc/apt/sources.list.d/caddy-stable.list
+      ansible.builtin.apt_repository:
+        state: present
+        repo: deb [signed-by=/usr/share/keyrings/caddy-stable-archive-keyring.gpg] https://dl.cloudsmith.io/public/caddy/stable/deb/debian any-version main
 - name: Install caddy, jq
   ansible.builtin.apt:
     pkg:
@@ -69,10 +71,8 @@
   register: x25519_pik
 - name: Generate x25519 PBK 
   shell:
-    cmd: xray x25519 -i {{ x25519_pik }} | tail -1 | cut -d' ' -f 3
+    cmd: xray x25519 -i {{ x25519_pik.stdout }} | tail -1 | cut -d' ' -f 3
   register: x25519_pbk
-- set_fact:
-    xray_pbk: "{{ x25519_pbk.stdout }}"
 - name: Generate SID
   shell:
     cmd: openssl rand -hex 8
@@ -119,13 +119,79 @@
           - "80"
           - "443"
         jump: ACCEPT
+    - name: Allow loopback in
+      shell:
+        cmd: iptables -A INPUT -i lo -j ACCEPT
+    - name: Allow loopback out
+      shell:
+        cmd: iptables -A OUTPUT -o lo -j ACCEPT
     - name: INPUT DROP
       ansible.builtin.iptables:
         chain: INPUT
         policy: DROP
+    - name: Save iptables rules
+      shell:
+        cmd: netfilter-persistent save
 - name: Print clipboard string
   debug:
-    msg: "vless://{{ xray_uuid.stdout }}@{{ vless.domain }}:443?type=tcp&security=reality&pbk={{ xray_pbk }}&fp=chrome&sni={{ vless.domain }}&sid={{ short_id.stdout }}&spx=%2F&flow=xtls-rprx-vision"
+    msg: "vless://{{ xray_uuid.stdout }}@{{ vless.domain }}:443?type=tcp&security=reality&pbk={{ x25519_pbk.stdout }}&fp=chrome&sni={{ vless.domain }}&sid={{ short_id.stdout }}&spx=%2F&flow=xtls-rprx-vision"
+- name: XRay outbound config 
+  debug:
+    msg: |
+          {
+            "tag": "default",
+            "protocol": "vless",
+            "settings": {
+              "vnext": [
+                {
+                  "address": "{{ vless.domain }}",
+                  "port": 443,
+                  "users": [
+                    {
+                      "id": "{{ xray_uuid.stdout }}",
+                      "encryption": "none",
+                      "flow": "xtls-rprx-vision"
+                    }
+                  ]
+                }
+              ]
+            },
+            "streamSettings": {
+              "network": "tcp",
+              "security": "reality",
+              "realitySettings": {
+                "serverName": "{{ vless.domain }}",
+                "fingerprint": "chrome",
+                "publicKey": "{{ x25519_pbk.stdout }}",
+                "shortId": "{{ short_id.stdout }}",
+                "spiderX": ""
+              }
+            }
+          }
+- name: Sing-box outbound config
+  debug:
+    msg: |
+          {
+              "type": "vless",
+              "server": "{{ vless.domain }}",
+              "server_port": 443,
+              "uuid": "{{ xray_uuid.stdout }}",
+              "flow": "xtls-rprx-vision",
+              "tls": {
+                  "enabled": true,
+                  "insecure": false,
+                  "server_name": "{{ vless.domain }}",
+                  "utls": {
+                      "enabled": true,
+                      "fingerprint": "chrome"
+                  },
+                  "reality": {
+                      "enabled": true,
+                      "public_key": "{{ x25519_pbk.stdout }}",
+                      "short_id": "{{ short_id.stdout }}"
+                  }
+              }
+          }
 - name: Print PBK, SID and UUID to connect to server.
   debug:
-    msg: "UUID: {{ xray_uuid.stdout }}, SID: {{ short_id.stdout }}, PBK: {{ xray_pbk }}"
+    msg: "UUID: {{ xray_uuid.stdout }}, SID: {{ short_id.stdout }}, PBK: {{ x25519_pbk.stdout }}"
