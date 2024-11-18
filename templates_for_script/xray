@@ -21,6 +21,7 @@
         "network": "tcp",
         "security": "reality",
         "realitySettings": {
+          "xver": 1,
           "dest": "127.0.0.1:4123",
           "serverNames": [
             "$VLESS_DOMAIN"
@@ -28,8 +29,7 @@
           "privateKey": "$XRAY_PIK",
           "shortIds": [
             "$XRAY_SID"
-          ],
-          "spiderX": "/"
+          ]
         }
       },
       "sniffing": {

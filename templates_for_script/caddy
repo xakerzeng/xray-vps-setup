@@ -1,7 +1,16 @@
 {
-    http_port 80
-    https_port 4123
-    default_bind 127.0.0.1
+  https_port 4123
+  default_bind 127.0.0.1
+  servers {
+    protocols h1 h2
+    listener_wrappers {
+      proxy_protocol {
+        allow 127.0.0.1/32
+      }
+      tls
+    }
+  }
+  auto_https disable_redirects
 }
 https://$VLESS_DOMAIN {
   root * /srv
@@ -10,8 +19,8 @@ https://$VLESS_DOMAIN {
     output file /var/lib/caddy/access.log {
       roll_size 10mb
       roll_keep 5
-    }
   }
+}
 }
 http://$VLESS_DOMAIN {
   bind 0.0.0.0
