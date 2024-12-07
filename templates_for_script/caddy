@@ -14,6 +14,9 @@
 }
 https://$VLESS_DOMAIN {
   root * /srv
+  basic_auth * {
+    xray_user $CADDY_BASIC_AUTH
+  }
   file_server browse
   log {
     output file /var/lib/caddy/access.log {
