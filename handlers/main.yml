@@ -1,2 +1,14 @@
 ---
 # handlers file for vps-setup
+- name: Restart xray
+  service:
+    name: xray
+    state: restarted
+- name: Restart caddy 
+  service:
+    name: caddy
+    state: restarted
+- name: Restart ssh 
+  service:
+    name: ssh
+    state: restarted

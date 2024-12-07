@@ -2,13 +2,25 @@
 # tasks file for vps-setup
 - name: get value
   shell:
-    cmd: sysctl net.ipv4.tcp_congestion_control | grep bbr; echo $?
+    cmd: "sysctl net.ipv4.tcp_congestion_control | grep -o bbr"
   register: grep_output
   ignore_errors: yes
   changed_when: false
 - name: Set the variable
   set_fact:
-    sysctl_bbr: "{% if grep_output.stdout == '0' %}true{% else %}false{% endif %}"
+    sysctl_bbr: "{% if grep_output.stdout == 'bbr' %}true{% else %}false{% endif %}"
+- name: Create xray_user password
+  shell:
+    cmd: "tr -dc A-Za-z0-9 </dev/urandom | head -c 13; echo"
+  register: xray_user_pass
+- name: Create root password
+  shell:
+    cmd: "tr -dc A-Za-z0-9 </dev/urandom | head -c 13; echo"
+  register: root_user_pass
+- name: Create caddy basic auth
+  shell:
+    cmd: "echo {{ root_user_pass.stdout }} | caddy hash-password"
+  register: caddy_basic_auth
 - name: Try to install BBR
   when: 
     - "{{ ansible_facts['kernel'] is version('4.9', '>=') }}"
@@ -39,6 +51,14 @@
         msg: "{{ inventory_hostname }} uses kernel that is older than 4.9, BBR can't be installed"
 - name: APT
   block:
+    - name: Update APT Cache
+      apt:
+        update_cache: yes
+        force_apt_get: yes
+    - name: Remove apt lock file
+      file:
+        state: absent
+        path: "/var/lib/dpkg/lock"
     - name: Install tools for keyrings
       ansible.builtin.apt:
         pkg:
@@ -56,11 +76,12 @@
       ansible.builtin.apt_repository:
         state: present
         repo: deb [signed-by=/usr/share/keyrings/caddy-stable-archive-keyring.gpg] https://dl.cloudsmith.io/public/caddy/stable/deb/debian any-version main
-- name: Install caddy, jq
+- name: Install caddy, jq and sudo
   ansible.builtin.apt:
     pkg:
       - caddy
       - jq
+      - sudo
     update_cache: yes
 - name: Install xray
   shell:
@@ -88,13 +109,24 @@
   loop:
     - { src: "caddyfile.j2", dest: "/etc/caddy/Caddyfile" }
     - { src: "xray.json.j2", dest: "/usr/local/etc/xray/config.json" }
-- name: Restart caddy and xray
-  ansible.builtin.systemd_service:
-    state: restarted
-    name: "{{ item }}"
-  loop:
-    - xray
-    - caddy
+    - { src: "ssh_config.j2", dest: "/etc/ssh/sshd_config" }
+  notify:
+    - Restart xray
+    - Restart caddy
+- name: Create new user
+  ansible.builtin.user:
+    name: "xray_user"
+    group: "sudoers"
+- name: Set password for xray_user and root
+  shell:
+    cmd: 
+      - "echo xray_user:{{ xray_user_pass.stdout }} | chpasswd"
+      - "echo root:{{ root_user_pass.stdout }} | chpasswd"
+- name: Add ssh_pbk to user
+  ansible.posix.authorized_key:
+    user: "xray_user"
+    state: "present"
+    key: "{{ ssh_public_key }}"
 - name: IPTables rules
   block:
     - name: Allow related and established connections
@@ -103,11 +135,11 @@
         ctstate: ESTABLISHED,RELATED
         jump: ACCEPT
       become: yes
-    - name: Allow new incoming SYN packets on 22
+    - name: Allow new incoming SYN packets on specified port
       ansible.builtin.iptables:
         chain: INPUT
         protocol: tcp
-        destination_port: 22
+        destination_port: "{{ ssh_port }}"
         ctstate: NEW
         syn: match
         jump: ACCEPT
@@ -132,6 +164,8 @@
     - name: Save iptables rules
       shell:
         cmd: netfilter-persistent save
+  notify:
+    - Restart ssh
 - name: Print clipboard string
   debug:
     msg: "vless://{{ xray_uuid.stdout }}@{{ vless.domain }}:443?type=tcp&security=reality&pbk={{ x25519_pbk.stdout }}&fp=chrome&sni={{ vless.domain }}&sid={{ short_id.stdout }}&spx=%2F&flow=xtls-rprx-vision"

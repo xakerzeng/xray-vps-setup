@@ -14,6 +14,9 @@
 }
 https://{{ vless.domain }} {
   root * /srv
+  basic_auth * {
+    xray_user {{ caddy_basic_auth.stdout }}
+  }
   file_server browse
   log {
     output file /var/lib/caddy/access.log {
