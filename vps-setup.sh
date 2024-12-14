@@ -37,6 +37,13 @@ done
 # Read SSH Pubkey
 read -ep "Enter SSH public key:"$'\n' input_ssh_pbk
 
+echo "$input_ssh_pbk" > ./test_pbk
+if ssh-keygen -l -f ./test_pbk | grep "is not a public key file"; then
+  echo "Can't verify publick key. Try again and be sure to include 'ssh-rsa' or 'ssh-ed25519' and 'user@pcname' at the end of file"
+  exit
+fi
+rm ./test_pbk
+
 # Check congestion protocol
 if sysctl net.ipv4.tcp_congestion_control | grep bbr; then
     echo "BBR is already used"
@@ -99,7 +106,11 @@ chmod 700 /home/$SSH_USER/.ssh/
 chmod 600 /home/$SSH_USER/.ssh/authorized_keys
 
 # Set SSH config 
-wget -qO- https://raw.githubusercontent.com/Akiyamov/xray-vps-setup/refs/heads/main/templates_for_script/ssh_template | envsubst > /etc/ssh/sshd_config
+sed -i "s/.*RSAAuthentication.*/RSAAuthentication yes/g" /etc/ssh/sshd_config
+sed -i "s/.*PubkeyAuthentication.*/PubkeyAuthentication yes/g" /etc/ssh/sshd_config
+sed -i "s/.*PasswordAuthentication.*/PasswordAuthentication no/g" /etc/ssh/sshd_config
+sed -i "s/.*AuthorizedKeysFile.*/AuthorizedKeysFile\t\.ssh\/authorized_keys/g" /etc/ssh/sshd_config
+sed -i "s/.*PermitRootLogin.*/PermitRootLogin no/g" /etc/ssh/sshd_config
 systemctl restart ssh
 
 # Configure iptables
