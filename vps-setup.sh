@@ -38,7 +38,9 @@ done
 read -ep "Enter SSH public key:"$'\n' input_ssh_pbk
 
 echo "$input_ssh_pbk" > ./test_pbk
-if ssh-keygen -l -f ./test_pbk | grep "is not a public key file"; then
+ssh-keygen -l -f ./test_pbk
+PBK_STATUS=$(echo $?)
+if [ "$PBK_STATUS" -eq 255 ]; then
   echo "Can't verify publick key. Try again and be sure to include 'ssh-rsa' or 'ssh-ed25519' and 'user@pcname' at the end of file"
   exit
 fi
@@ -104,13 +106,10 @@ touch /home/$SSH_USER/.ssh/authorized_keys
 echo $input_ssh_pbk >> /home/$SSH_USER/.ssh/authorized_keys
 chmod 700 /home/$SSH_USER/.ssh/
 chmod 600 /home/$SSH_USER/.ssh/authorized_keys
+chown $SSH_USER:$SSH_USER -R /home/$SSH_USER
 
 # Set SSH config 
-sed -i "s/.*RSAAuthentication.*/RSAAuthentication yes/g" /etc/ssh/sshd_config
-sed -i "s/.*PubkeyAuthentication.*/PubkeyAuthentication yes/g" /etc/ssh/sshd_config
-sed -i "s/.*PasswordAuthentication.*/PasswordAuthentication no/g" /etc/ssh/sshd_config
-sed -i "s/.*AuthorizedKeysFile.*/AuthorizedKeysFile\t\.ssh\/authorized_keys/g" /etc/ssh/sshd_config
-sed -i "s/.*PermitRootLogin.*/PermitRootLogin no/g" /etc/ssh/sshd_config
+wget -qO- https://raw.githubusercontent.com/Akiyamov/xray-vps-setup/refs/heads/main/templates_for_script/ssh_template | envsubst > /etc/ssh/sshd_config
 systemctl restart ssh
 
 # Configure iptables
