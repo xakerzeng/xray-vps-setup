@@ -83,8 +83,14 @@ export XRAY_PIK=$(xray x25519 | head -n1 | cut -d' ' -f 3)
 export XRAY_PBK=$(xray x25519 -i $XRAY_PIK | tail -1 | cut -d' ' -f 3)
 export XRAY_SID=$(openssl rand -hex 8)
 export XRAY_UUID=$(xray uuid)
+export IMAGES_CADDY=("IL1.png", "IL2.png", "IL3.png", "SW1.png", "SW2.png", "SW3.png")
+export IMAGE_CADDY=$(printf "%s\n" "${expressions[@]}" | shuf -n1)
 
 # Setup config for Caddy and XRay
+wget -q -O /srv/Logo.png https://raw.githubusercontent.com/Akiyamov/xray-vps-setup/refs/heads/main/images_for_site/$IMAGE_CADDY
+wget -q -O /srv/index.html https://raw.githubusercontent.com/Akiyamov/xray-vps-setup/refs/heads/main/templates_for_script/basic_html
+wget -q -O /srv/ghost.min.css https://raw.githubusercontent.com/Akiyamov/xray-vps-setup/refs/heads/main/images_for_site/css_html
+
 wget -qO- https://raw.githubusercontent.com/Akiyamov/xray-vps-setup/refs/heads/main/templates_for_script/caddy | envsubst > /etc/caddy/Caddyfile
 wget -qO- https://raw.githubusercontent.com/Akiyamov/xray-vps-setup/refs/heads/main/templates_for_script/xray | envsubst > /usr/local/etc/xray/config.json
 
