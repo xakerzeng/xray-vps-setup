@@ -2,6 +2,9 @@
 
 set -e
 
+export GIT_BRANCH="main"
+export GIT_REPO="$GIT_REPO"
+
 # Check if script started as root
 if [ "$EUID" -ne 0 ]
   then echo "Please run as root"
@@ -87,8 +90,8 @@ export IMAGES_CADDY=("IL1.png", "IL2.png", "IL3.png", "SW1.png", "SW2.png", "SW3
 export IMAGE_CADDY=$(printf "%s\n" "${expressions[@]}" | shuf -n1)
 
 # Setup config for Caddy and XRay
-wget -qO- https://raw.githubusercontent.com/Akiyamov/xray-vps-setup/refs/heads/main/templates_for_script/caddy | envsubst > /etc/caddy/Caddyfile
-wget -qO- https://raw.githubusercontent.com/Akiyamov/xray-vps-setup/refs/heads/main/templates_for_script/xray | envsubst > /usr/local/etc/xray/config.json
+wget -qO- https://raw.githubusercontent.com/$GIT_REPO/refs/heads/$GIT_BRANCH/templates_for_script/caddy | envsubst > /etc/caddy/Caddyfile
+wget -qO- https://raw.githubusercontent.com/$GIT_REPO/refs/heads/$GIT_BRANCH/templates_for_script/xray | envsubst > /usr/local/etc/xray/config.json
 
 # Restart XRay and Caddy
 systemctl restart xray
@@ -111,7 +114,7 @@ chmod 600 /home/$SSH_USER/.ssh/authorized_keys
 chown $SSH_USER:$SSH_USER -R /home/$SSH_USER
 
 # Set SSH config 
-wget -qO- https://raw.githubusercontent.com/Akiyamov/xray-vps-setup/refs/heads/main/templates_for_script/ssh_template | envsubst > /etc/ssh/sshd_config
+wget -qO- https://raw.githubusercontent.com/$GIT_REPO/refs/heads/$GIT_BRANCH/templates_for_script/ssh_template | envsubst > /etc/ssh/sshd_config
 systemctl restart ssh
 
 # Configure iptables
@@ -131,9 +134,9 @@ echo "New user for ssh: $SSH_USER, password for user: $SSH_USER_PASS. New port f
 echo "Clipboard string format"
 echo "vless://$XRAY_UUID@$VLESS_DOMAIN:443?type=tcp&security=reality&pbk=$XRAY_PBK&fp=chrome&sni=$VLESS_DOMAIN&sid=$XRAY_SID&spx=%2F&flow=xtls-rprx-vision" | envsubst
 echo "XRay outbound config"
-wget -qO- https://raw.githubusercontent.com/Akiyamov/xray-vps-setup/refs/heads/main/templates_for_script/xray_outbound | envsubst 
+wget -qO- https://raw.githubusercontent.com/$GIT_REPO/refs/heads/$GIT_BRANCH/templates_for_script/xray_outbound | envsubst 
 echo "Sing-box outbound config"
-wget -qO- https://raw.githubusercontent.com/Akiyamov/xray-vps-setup/refs/heads/main/templates_for_script/sing_box_outbound | envsubst 
+wget -qO- https://raw.githubusercontent.com/$GIT_REPO/refs/heads/$GIT_BRANCH/templates_for_script/sing_box_outbound | envsubst 
 echo "Plain data"
 echo "PBK: $XRAY_PBK, SID: $XRAY_SID, UUID: $XRAY_UUID"
 
