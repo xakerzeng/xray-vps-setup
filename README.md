@@ -17,10 +17,25 @@ bash <(wget -qO- https://raw.githubusercontent.com/Akiyamov/xray-vps-setup/refs/
 ## Плейбук
 
 [Ansible-galaxy](https://galaxy.ansible.com/ui/standalone/roles/Akiyamov/xray-vps-setup/install/)
+```yaml
+- name: Setup vps 
+  hosts: some_host
+  roles:
+    - Akiyamov.xray-vps-setup  
+  vars:
+    domain: example.com # домен, уровень неважен
+    setup_variant: marzban # marzban or xray
+    setup_warp: false # true or false
+    configure_security: true # true or false
+    user_to_create: xray_user # если configure_security: true, то обязательно
+    user_password: "xray_password" # если configure_security: true, то обязательно
+    SSH_PORT: 22 # если configure_security: true, то обязательно
+    ssh_public_key: "" # если configure_security: true, то обязательно
+```
 
 ## Ручная установка
 
-Описана [здесь](https://gist.github.com/Akiyamov/bf39613c8e38451e9eaa9fad22f4f40a).  
+Описана [здесь](https://github.com/Akiyamov/xray-vps-setup/blob/main/install_in_docker.md).  
 
 ## Почему не nginx, haproxy, 3x-ui, x-ui, sing-box...
 
