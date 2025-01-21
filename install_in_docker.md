@@ -245,7 +245,7 @@ wget -qO- https://raw.githubusercontent.com/Jolymmiles/confluence-marzban-home/m
         "decryption": "none"
       },
       "streamSettings": {
-        "network": "raw",
+        "network": "tcp",
         "security": "reality",
         "realitySettings": {
           "xver": 1,
