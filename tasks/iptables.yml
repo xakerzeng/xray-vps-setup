@@ -18,6 +18,11 @@
         ctstate: NEW
         syn: match
         jump: ACCEPT
+    - name: Allow ICMP 
+      ansible.builtin.iptables:
+        chain: INPUT
+        protocol: icmp
+        jump: ACCEPT
     - name: Allow 80, 443 connections
       ansible.builtin.iptables:
         chain: INPUT

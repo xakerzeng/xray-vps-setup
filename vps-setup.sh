@@ -164,6 +164,7 @@ EOF
 # Configure iptables
 edit_iptables() {
   apt-get install iptables-persistent netfilter-persistent -y
+  iptables -A INPUT -p icmp -j ACCEPT
   iptables -A INPUT -m state --state RELATED,ESTABLISHED -j ACCEPT
   iptables -A INPUT -p tcp -m state --state NEW -m tcp --dport $SSH_PORT -j ACCEPT
   iptables -A INPUT -p tcp -m tcp --dport 80 -j ACCEPT
