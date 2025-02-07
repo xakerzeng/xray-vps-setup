@@ -92,7 +92,7 @@ URL панели
 URL подписок  
 
 ### Настройка прокси
-Создадим папку `/opt/xray-vps-setup` командой `mkdir -p /opt/xray-vpx-setup`.  
+Создадим папку `/opt/xray-vps-setup` командой `mkdir -p /opt/xray-vps-setup`.  
 После этого переходим в папку и создаем в ней файл `docker-compose.yml`  
 
 <details>
@@ -140,7 +140,7 @@ services:
       - ./xray:/etc/xray
 ```  
 </details>
-Создаем папку `/opt/xray-vpx-setup/caddy` и в ней создаем файл `Caddyfile` и меняем его следующим образом.  
+Создаем папку `/opt/xray-vps-setup/caddy` и в ней создаем файл `Caddyfile` и меняем его следующим образом.  
 <details><summary>Marzban</summary>
 
 ```yaml
