@@ -2,7 +2,7 @@
 
 set -e
 
-export GIT_BRANCH="marzban"
+export GIT_BRANCH="main"
 export GIT_REPO="Akiyamov/xray-vps-setup"
 
 # Check if script started as root
