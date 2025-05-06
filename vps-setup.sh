@@ -206,7 +206,7 @@ warp_install() {
       export XRAY_CONFIG_WARP="/opt/xray-vps-setup/xray/config.json"
     fi
     yq eval \
-    '.outbounds =+ {"tag": "warp","protocol": "socks","settings": {"servers": [{"address": "127.0.0.1","port": 40000}]}}' \
+    '.outbounds += {"tag": "warp","protocol": "socks","settings": {"servers": [{"address": "127.0.0.1","port": 40000}]}}' \
     -i $XRAY_CONFIG_WARP
     yq eval \
     '.routing.rules += {"outboundTag": "warp", "domain": ["geosite:category-ru", "regexp:.*\\.xn--$", "regexp:.*\\.ru$", "regexp:.*\\.su$"]}' \
