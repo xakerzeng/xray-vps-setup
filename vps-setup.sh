@@ -13,7 +13,7 @@ fi
 
 # Install idn 
 apt-get update
-apt-get install idn -y
+apt-get install idn sudo -y
 
 # Read domain input
 read -ep "Enter your domain:"$'\n' input_domain
@@ -144,7 +144,7 @@ sshd_edit() {
 }
 
 add_user() {
-  useradd $SSH_USER
+  useradd $SSH_USER -s /bin/bash
   usermod -aG sudo $SSH_USER
   echo $SSH_USER:$SSH_USER_PASS | chpasswd
   mkdir -p /home/$SSH_USER/.ssh
