@@ -36,7 +36,7 @@ bash <(wget -qO- https://raw.githubusercontent.com/Akiyamov/xray-vps-setup/refs/
 ## Добавляем подписку и поддержку Mihomo
 
 ```
-bash <(curl -Ls https://github.com/cortez24rus/marz-sub/raw/main/marz-sub.sh)
+bash <(wget -qO- https://github.com/legiz-ru/marz-sub/raw/main/marz-sub.sh)
 ```
 После этого сделайте `docker compose -f /opt/xray-vps-setup down && docker compose -f /opt/xray-vps-setup up -d` 
 
