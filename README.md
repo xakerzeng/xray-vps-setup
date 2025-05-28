@@ -33,6 +33,14 @@ bash <(wget -qO- https://raw.githubusercontent.com/Akiyamov/xray-vps-setup/refs/
     ssh_public_key: "" # если configure_security: true, то обязательно
 ```
 
+## Добавляем подписку и поддержку Mihomo
+
+```
+bash <(curl -Ls https://github.com/cortez24rus/marz-sub/raw/main/marz-sub.sh)
+```
+После этого сделайте `docker compose -f /opt/xray-vps-setup down && docker compose -f /opt/xray-vps-setup up -d` 
+
+
 ## Ручная установка
 
 Описана [здесь](https://github.com/Akiyamov/xray-vps-setup/blob/main/install_in_docker.md).  

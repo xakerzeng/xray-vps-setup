@@ -140,6 +140,7 @@ sshd_edit() {
   grep -r Port /etc/ssh -l | xargs -n 1 sed -i -e "/Port /c\Port $SSH_PORT"
   grep -r PasswordAuthentication /etc/ssh -l | xargs -n 1 sed -i -e "/PasswordAuthentication /c\PasswordAuthentication no"
   grep -r PermitRootLogin /etc/ssh -l | xargs -n 1 sed -i -e "/PermitRootLogin /c\PermitRootLogin no"
+  systemctl daemon-reload
   systemctl restart ssh
 }
 
@@ -219,10 +220,12 @@ end_script() {
   if [[ "${marzban_input,,}" == "y" ]]; then
     docker run -v /opt/xray-vps-setup/caddy/Caddyfile:/opt/xray-vps-setup/Caddyfile --rm caddy caddy fmt --overwrite /opt/xray-vps-setup/Caddyfile
     docker compose -f /opt/xray-vps-setup/docker-compose.yml up -d
+    clear
     echo "Marzban location: https://$VLESS_DOMAIN/$MARZBAN_PATH. Marzban user: xray_admin, password: $MARZBAN_PASS"
   else
     docker run -v /opt/xray-vps-setup/caddy/Caddyfile:/opt/xray-vps-setup/Caddyfile --rm caddy caddy fmt --overwrite /opt/xray-vps-setup/Caddyfile
     docker compose -f /opt/xray-vps-setup/docker-compose.yml up -d
+    clear
     echo "Clipboard string format"
     echo "vless://$XRAY_UUID@$VLESS_DOMAIN:443?type=tcp&security=reality&pbk=$XRAY_PBK&fp=chrome&sni=$VLESS_DOMAIN&sid=$XRAY_SID&spx=%2F&flow=xtls-rprx-vision" | envsubst
     echo "XRay outbound config"
