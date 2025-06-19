@@ -102,6 +102,7 @@ xray_setup() {
     wget -qO- https://raw.githubusercontent.com/$GIT_REPO/refs/heads/$GIT_BRANCH/templates_for_script/compose | envsubst > ./docker-compose.yml
     yq eval \
     '.services.marzban.image = "gozargah/marzban:v0.8.4" |
+     .services.marzban.container_name = "marzban" |
      .services.marzban.restart = "always" |
      .services.marzban.env_file = "./marzban/.env" |
      .services.marzban.network_mode = "host" | 
@@ -120,7 +121,10 @@ xray_setup() {
     wget -qO- https://raw.githubusercontent.com/$GIT_REPO/refs/heads/$GIT_BRANCH/templates_for_script/compose | envsubst > ./docker-compose.yml
     mkdir -p /opt/xray-vps-setup/caddy/templates
     yq eval \
-    '.services.xray.image = "ghcr.io/xtls/xray-core:25.1.1" | 
+    '.services.xray.image = "ghcr.io/xtls/xray-core:25.6.8" | 
+    .services.xray.container_name = "xray" |
+    .services.xray.user = "root" |
+    .services.xray.command = "run -c /etc/xray/config.json" |
     .services.xray.restart = "always" | 
     .services.xray.network_mode = "host" | 
     .services.caddy.volumes[2] = "./caddy/templates:/srv" |
