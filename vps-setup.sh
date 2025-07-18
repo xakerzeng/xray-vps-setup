@@ -64,8 +64,10 @@ else
     echo "Enabled BBR"
 fi
 
+export ARCH=$(dpkg-architecture -q DEB_BUILD_ARCH)
+
 yq_install() {
-  wget https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64 -O /usr/bin/yq && chmod +x /usr/bin/yq
+  wget https://github.com/mikefarah/yq/releases/latest/download/yq_linux_$ARCH -O /usr/bin/yq && chmod +x /usr/bin/yq
 }
 
 yq_install
