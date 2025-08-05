@@ -43,7 +43,7 @@ bash <(wget -qO- https://github.com/legiz-ru/marz-sub/raw/main/marz-sub.sh)
 
 ## Ручная установка
 
-Описана [здесь](https://github.com/Akiyamov/xray-vps-setup/blob/main/install_in_docker.md).  
+Описана [здесь](https://github.com/xakerzeng/xray-vps-setup/blob/main/install_in_docker.md).  
 
 ## Почему не nginx, haproxy, 3x-ui, x-ui, sing-box...
 
