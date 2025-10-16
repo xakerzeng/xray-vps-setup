@@ -19,14 +19,42 @@ apt-get install idn sudo -y
 read -ep "Enter your domain:"$'\n' input_domain
 
 export VLESS_DOMAIN=$(echo $input_domain | idn)
-export TEST_DOMAIN=$(nslookup $VLESS_DOMAIN | awk -F': ' 'NR==6 { print $2 } ')
-if [ $TEST_DOMAIN -eq "" ]; then
+
+SERVER_IPS=($(hostname -I))
+
+RESOLVED_IP=$(dig +short $VLESS_DOMAIN | tail -n1)
+
+if [ -z "$RESOLVED_IP" ]; then
+  echo "Warning: Domain has no DNS record"
   read -ep "Are you sure? That domain has no DNS record. If you didn't add that you will have to restart xray and caddy by yourself [y/N]"$'\n' prompt_response
-  if [[ "$prompt_response" =~ ^([yY]) ]]; then
-    echo "Ok"
+  if [[ "$prompt_response" =~ ^([yY])$ ]]; then
+    echo "Ok, proceeding without DNS verification"
   else 
     echo "Come back later"
     exit 1
+  fi
+else
+  MATCH_FOUND=false
+  for server_ip in "${SERVER_IPS[@]}"; do
+    if [ "$RESOLVED_IP" == "$server_ip" ]; then
+      MATCH_FOUND=true
+      break
+    fi
+  done
+  
+  if [ "$MATCH_FOUND" = true ]; then
+    echo "✓ DNS record points to this server ($RESOLVED_IP)"
+  else
+    echo "Warning: DNS record exists but points to different IP"
+    echo "  Domain resolves to: $RESOLVED_IP"
+    echo "  This server's IPs: ${SERVER_IPS[*]}"
+    read -ep "Continue anyway? [y/N]"$'\n' prompt_response
+    if [[ "$prompt_response" =~ ^([yY])$ ]]; then
+      echo "Ok, proceeding"
+    else 
+      echo "Come back later"
+      exit 1
+    fi
   fi
 fi
 
