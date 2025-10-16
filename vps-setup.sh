@@ -53,6 +53,12 @@ if [[ ${configure_ssh_input,,} == "y" ]]; then
 fi
 
 read -ep "Do you want to install WARP and use it on russian websites? [y/N] "$'\n' configure_warp_input
+if [[ ${configure_warp_input,,} == "y" ]]; then
+  if ! curl -I https://api.cloudflareclient.com --connect-timeout 10 > /dev/null 2>&1; then
+    echo "Warp can't be used"
+    configure_warp_input="n"
+  fi
+fi
 
 # Check congestion protocol
 if sysctl net.ipv4.tcp_congestion_control | grep bbr; then
